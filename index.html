@@ -36,7 +36,7 @@
                 <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-nirrOrange to-nirrGold bg-clip-text text-transparent">
                     DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA
                 </h1>
-                <p class="text-xs md:text-sm text-gray-400 mt-1">Sistem Pemantau Berita Nasional (NIRR) - Realtime Media Monitoring</p>
+                <p class="text-xs md:text-sm text-gray-400 mt-1">Sistem Pemantau Berita Nasional & TV Parlemen (NIRR)</p>
             </div>
             <div class="flex items-center gap-3 bg-nirrPanel/80 px-4 py-2 rounded-full border border-amber-500/20 text-sm">
                 <span class="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50" id="system-status-dot"></span>
@@ -74,18 +74,18 @@
                 <!-- Pengaturan Discord Webhook & Kustomisasi Pesan -->
                 <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
                     <h2 class="text-base font-semibold text-nirrGold border-b border-amber-500/20 pb-3 mb-4">Pengaturan Discord Webhook</h2>
-                    <p class="text-xs text-gray-400 mb-4">Konfigurasi URL, pesan teks tambahan/gambar, dan pengaturan tag (mention).</p>
+                    <p class="text-xs text-gray-400 mb-4">Konfigurasi URL, pesan teks tambahan, dan tag (mention) untuk notifikasi berita & siaran langsung.</p>
                     
                     <div class="flex flex-col gap-3 mb-4">
                         <label for="webhook-url-input" class="text-xs font-medium text-gray-300">URL Discord Webhook</label>
                         <input type="password" id="webhook-url-input" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"
                             class="bg-black/40 border border-amber-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-nirrOrange">
                         
-                        <label for="webhook-message-input" class="text-xs font-medium text-gray-300 mt-2">Pesan Teks / Link Gambar Tambahan</label>
-                        <textarea id="webhook-message-input" rows="2" placeholder="Tulis pesan pengantar, tautan gambar (.png/.jpg), atau informasi tambahan..."
+                        <label for="webhook-message-input" class="text-xs font-medium text-gray-300 mt-2">Pesan Teks / Catatan Tambahan</label>
+                        <textarea id="webhook-message-input" rows="2" placeholder="Tulis pengantar atau informasi tambahan..."
                             class="bg-black/40 border border-amber-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-nirrOrange resize-none"></textarea>
 
-                        <label for="webhook-mention-input" class="text-xs font-medium text-gray-300 mt-2">Mention (Tag Role ID / @everyone / @here / User ID)</label>
+                        <label for="webhook-mention-input" class="text-xs font-medium text-gray-300 mt-2">Mention (@everyone / @here / Role ID)</label>
                         <input type="text" id="webhook-mention-input" placeholder="@everyone atau <@&ROLE_ID>" autocomplete="off"
                             class="bg-black/40 border border-amber-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-nirrOrange">
 
@@ -100,8 +100,32 @@
                 </section>
             </div>
 
-            <!-- Kolom Kanan: Daftar Berita & Log Aktivitas -->
+            <!-- Kolom Kanan: Live TV Parlemen, Daftar Berita & Log -->
             <div class="flex flex-col gap-6 lg:col-span-2">
+                <!-- Live TV Parlemen API Section -->
+                <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
+                    <div class="flex justify-between items-center border-b border-amber-500/20 pb-3 mb-4">
+                        <h2 class="text-base font-semibold text-nirrGold flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                            TV Parlemen (Live Streaming API)
+                        </h2>
+                        <button class="bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-md" id="btn-broadcast-live">Kirim Siaran Langsung ke Discord</button>
+                    </div>
+                    <div class="relative w-full aspect-video bg-black/60 rounded-xl overflow-hidden border border-amber-500/20 shadow-inner flex items-center justify-center">
+                        <!-- Embedded Live Stream Player (TV Parlemen / DPR RI Official Stream YouTube / Web Stream) -->
+                        <iframe id="live-tv-iframe" class="w-full h-full border-0" 
+                            src="https://www.youtube.com/embed/live_stream?channel=UC523w6hKj15jV69Lw_K861g" 
+                            title="TV Parlemen Live Streaming" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        ></iframe>
+                    </div>
+                    <div class="flex justify-between items-center mt-3 text-xs text-gray-400">
+                        <span>Sumber Resmi: Kanal Siaran Langsung Rapat & Kegiatan DPR-RI</span>
+                        <span class="text-emerald-400 font-medium">Status: Siaran Langsung Aktif</span>
+                    </div>
+                </section>
+
                 <!-- Pemantauan Berita & Feed -->
                 <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
                     <div class="flex justify-between items-center border-b border-amber-500/20 pb-3 mb-4">
@@ -135,7 +159,7 @@
                 <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
                     <h2 class="text-base font-semibold text-nirrGold border-b border-amber-500/20 pb-3 mb-4">Log Aktivitas Sistem</h2>
                     <div class="bg-[#070A12] border border-white/5 rounded-lg p-3 h-40 overflow-y-auto font-mono text-xs flex flex-col gap-1.5" id="log-container">
-                        <div class="text-nirrGold">[Sistem] Menginisialisasi antarmuka dan modul pemantauan berita...</div>
+                        <div class="text-nirrGold">[Sistem] Menginisialisasi antarmuka dan modul TV Parlemen...</div>
                     </div>
                 </section>
             </div>
@@ -144,7 +168,7 @@
         <!-- Footer -->
         <footer class="text-center py-6 text-xs text-gray-400 border-t border-amber-500/20">
             <p>DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA - NIRR</p>
-            <p class="text-nirrOrange mt-1">Sistem Pemantau Berita Terintegrasi Nasional</p>
+            <p class="text-nirrOrange mt-1">Sistem Pemantau Berita & TV Parlemen Terintegrasi Nasional</p>
         </footer>
     </div>
 

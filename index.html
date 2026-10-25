@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEMANTAU BERITA NASIONAL DPR-RI - NIRR</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0B1020">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-content">
+                <h1>DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA</h1>
+                <p class="subtitle">Sistem Pemantau Berita Nasional (NIRR)</p>
+            </div>
+            <div class="header-badge">
+                <span class="badge-dot" id="system-status-dot"></span>
+                <span id="system-status-text">Menghubungkan...</span>
+            </div>
+        </header>
+
+        <main class="dashboard-grid">
+            <!-- Ringkasan Statistik -->
+            <section class="card stats-card">
+                <h2>Statistik Pemantauan</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Berita Ditemukan</span>
+                        <span class="stat-value" id="stat-total-news">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Terkirim ke Discord</span>
+                        <span class="stat-value" id="stat-sent-discord">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Status Firebase</span>
+                        <span class="stat-value status-badge" id="stat-firebase-status">Menunggu</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Pembaruan Terakhir</span>
+                        <span class="stat-value" id="stat-last-update">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pengaturan Discord Webhook -->
+            <section class="card webhook-card">
+                <h2>Pengaturan Discord Webhook</h2>
+                <p class="section-desc">Konfigurasi aman untuk pengiriman notifikasi embed berita otomatis ke Discord.</p>
+                <div class="form-group">
+                    <label for="webhook-url-input">URL Discord Webhook</label>
+                    <input type="password" id="webhook-url-input" placeholder="https://discord.com/api/webhooks/..." autocomplete="off">
+                    <small class="form-hint" id="webhook-status-hint">Status Webhook: Belum dikonfigurasi / Tersimpan di Backend</small>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" id="btn-save-webhook">Simpan Webhook</button>
+                    <button class="btn btn-secondary" id="btn-test-webhook">Uji Koneksi</button>
+                    <button class="btn btn-danger" id="btn-delete-webhook">Hapus Webhook</button>
+                </div>
+            </section>
+
+            <!-- Pemantauan Berita & Feed -->
+            <section class="card news-card full-width">
+                <div class="card-header-flex">
+                    <h2>Daftar Berita Terbaru DPR-RI</h2>
+                    <button class="btn btn-sm btn-secondary" id="btn-refresh-news">Muat Ulang</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="news-table">
+                        <thead>
+                            <tr>
+                                <th>Waktu Publikasi</th>
+                                <th>Judul Berita</th>
+                                <th>Sumber Media</th>
+                                <th>Status Discord</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="news-table-body">
+                            <tr>
+                                <td colspan="5" class="text-center">Memuat data berita dari Firebase...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Log Aktivitas -->
+            <section class="card log-card full-width">
+                <h2>Log Aktivitas Sistem</h2>
+                <div class="log-container" id="log-container">
+                    <div class="log-item info">[Sistem] Menginisialisasi antarmuka dan koneksi Firebase Realtime Database...</div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA - NIRR</p>
+            <p class="footer-sub">Sistem Pemantau Berita Terintegrasi 24/7</p>
+        </footer>
+    </div>
+
+    <!-- Firebase SDK (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

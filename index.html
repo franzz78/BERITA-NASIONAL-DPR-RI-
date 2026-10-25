@@ -36,7 +36,7 @@
                 <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-nirrOrange to-nirrGold bg-clip-text text-transparent">
                     DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA
                 </h1>
-                <p class="text-xs md:text-sm text-gray-400 mt-1">Sistem Pemantau Berita 22 Media Nasional & Live TVR Parlemen (NIRR)</p>
+                <p class="text-xs md:text-sm text-gray-400 mt-1">Sistem Pemantau Berita Otomatis 22 Media Nasional & TVR Parlemen (NIRR)</p>
             </div>
             <div class="flex items-center gap-3 bg-nirrPanel/80 px-4 py-2 rounded-full border border-amber-500/20 text-sm">
                 <span class="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50" id="system-status-dot"></span>
@@ -57,7 +57,7 @@
                             <span class="text-lg font-bold text-white mt-1" id="stat-total-news">0</span>
                         </div>
                         <div class="bg-black/30 border border-white/5 p-3 rounded-lg flex flex-col">
-                            <span class="text-xs text-gray-400">Terkirim Discord</span>
+                            <span class="text-xs text-gray-400">Terkirim Otomatis</span>
                             <span class="text-lg font-bold text-white mt-1" id="stat-sent-discord">0</span>
                         </div>
                         <div class="bg-black/30 border border-white/5 p-3 rounded-lg flex flex-col col-span-2">
@@ -65,8 +65,8 @@
                             <span class="text-xs font-semibold px-2 py-1 rounded w-fit mt-1 bg-amber-500/10 text-amber-400" id="stat-firebase-status">Menunggu</span>
                         </div>
                         <div class="bg-black/30 border border-white/5 p-3 rounded-lg flex flex-col col-span-2">
-                            <span class="text-xs text-gray-400">Pembaruan Terakhir</span>
-                            <span class="text-sm font-bold text-white mt-1" id="stat-last-update">-</span>
+                            <span class="text-xs text-gray-400">Pemeriksaan Otomatis Berikutnya</span>
+                            <span class="text-sm font-bold text-amber-400 mt-1" id="stat-next-scan">60 detik</span>
                         </div>
                     </div>
                 </section>
@@ -74,7 +74,7 @@
                 <!-- Pengaturan Discord Webhook -->
                 <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
                     <h2 class="text-base font-semibold text-nirrGold border-b border-amber-500/20 pb-3 mb-4">Pengaturan Discord Webhook</h2>
-                    <p class="text-xs text-gray-400 mb-4">Konfigurasi URL Webhook, pesan kustom, dan mention untuk penyiaran berita & TVR Parlemen.</p>
+                    <p class="text-xs text-gray-400 mb-4">Konfigurasi URL Webhook, pesan kustom, dan mention untuk pengiriman berita otomatis 24/7.</p>
                     
                     <div class="flex flex-col gap-3 mb-4">
                         <label for="webhook-url-input" class="text-xs font-medium text-gray-300">URL Discord Webhook</label>
@@ -112,7 +112,6 @@
                         <button class="bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-90 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-md" id="btn-broadcast-live">Kirim Siaran TVR ke Discord</button>
                     </div>
                     <div class="relative w-full aspect-video bg-black/80 rounded-xl overflow-hidden border border-amber-500/20 shadow-inner">
-                        <!-- Stream resmi YouTube TVR PARLEMEN Channel ID: UCK-mqog3-tfRX8Zu5zcz9DQ -->
                         <iframe id="tvr-live-iframe" class="w-full h-full border-0" 
                             src="https://www.youtube.com/embed/live_stream?channel=UCK-mqog3-tfRX8Zu5zcz9DQ" 
                             title="TVR PARLEMEN Live Streaming DPR RI" 
@@ -122,19 +121,19 @@
                     </div>
                     <div class="flex flex-wrap justify-between items-center mt-3 text-xs text-gray-400 gap-2">
                         <span>Sumber Resmi: Biro Pemberitaan Parlemen - SETJEN DPR RI</span>
-                        <span class="text-emerald-400 font-medium">Status: Live Streaming 24 Jam Aktif</span>
+                        <span class="text-emerald-400 font-medium">Status: Auto-Scan Berita Pejabat & Parlemen Aktif</span>
                     </div>
                 </section>
 
-                <!-- Pemantauan Berita 22 Media Nasional -->
+                <!-- Pemantauan Berita 22 Media Nasional (Otomatis) -->
                 <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
                     <div class="flex justify-between items-center border-b border-amber-500/20 pb-3 mb-4">
                         <div>
-                            <h2 class="text-base font-semibold text-nirrGold">Daftar Berita DPR-RI (22 Media Nasional)</h2>
-                            <p class="text-xs text-gray-400">ANTARA, Kompas, Detik, CNN, Tempo, Liputan6, Tribun, Kumparan, Republika, SINDOnews, dll.</p>
+                            <h2 class="text-base font-semibold text-nirrGold">Pemantauan Berita Pejabat & Parlemen (22 Media)</h2>
+                            <p class="text-xs text-gray-400">Otomatis menyaring berita pejabat, menteri, politisi, & DPR dari ANTARA, Kompas, Detik, CNN, Tempo, dll.</p>
                         </div>
                         <div class="flex gap-2">
-                            <button class="bg-gradient-to-r from-nirrOrangeDark to-nirrOrange hover:opacity-90 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap" id="btn-fetch-live">Tarik 22 Media API</button>
+                            <button class="bg-gradient-to-r from-nirrOrangeDark to-nirrOrange hover:opacity-90 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap" id="btn-fetch-live">Scan Manual Sekarang</button>
                             <button class="bg-white/10 hover:bg-white/15 border border-amber-500/20 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition" id="btn-refresh-news">Muat Ulang</button>
                         </div>
                     </div>
@@ -162,7 +161,7 @@
                 <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
                     <h2 class="text-base font-semibold text-nirrGold border-b border-amber-500/20 pb-3 mb-4">Log Aktivitas Sistem</h2>
                     <div class="bg-[#070A12] border border-white/5 rounded-lg p-3 h-40 overflow-y-auto font-mono text-xs flex flex-col gap-1.5" id="log-container">
-                        <div class="text-nirrGold">[Sistem] Menginisialisasi modul TVR PARLEMEN dan API 22 Media Nasional...</div>
+                        <div class="text-nirrGold">[Sistem] Mengaktifkan pemantauan otomatis berita pejabat dan parlemen setiap 1 menit...</div>
                     </div>
                 </section>
             </div>
@@ -171,7 +170,7 @@
         <!-- Footer -->
         <footer class="text-center py-6 text-xs text-gray-400 border-t border-amber-500/20">
             <p>DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA - NIRR</p>
-            <p class="text-nirrOrange mt-1">Sistem Pemantau Berita & TVR PARLEMEN Terintegrasi 24/7</p>
+            <p class="text-nirrOrange mt-1">Sistem Pemantau Berita Otomatis & TVR PARLEMEN Terintegrasi 24/7</p>
         </footer>
     </div>
 

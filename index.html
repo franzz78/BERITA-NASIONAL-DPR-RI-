@@ -71,18 +71,29 @@
                     </div>
                 </section>
 
-                <!-- Pengaturan Discord Webhook -->
+                <!-- Pengaturan Discord Webhook & Kustomisasi Pesan -->
                 <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
                     <h2 class="text-base font-semibold text-nirrGold border-b border-amber-500/20 pb-3 mb-4">Pengaturan Discord Webhook</h2>
-                    <p class="text-xs text-gray-400 mb-4">Konfigurasi URL Webhook untuk pengiriman embed berita otomatis secara real-time.</p>
+                    <p class="text-xs text-gray-400 mb-4">Konfigurasi URL, pesan teks tambahan/gambar, dan pengaturan tag (mention).</p>
+                    
                     <div class="flex flex-col gap-3 mb-4">
                         <label for="webhook-url-input" class="text-xs font-medium text-gray-300">URL Discord Webhook</label>
                         <input type="password" id="webhook-url-input" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"
                             class="bg-black/40 border border-amber-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-nirrOrange">
+                        
+                        <label for="webhook-message-input" class="text-xs font-medium text-gray-300 mt-2">Pesan Teks / Link Gambar Tambahan</label>
+                        <textarea id="webhook-message-input" rows="2" placeholder="Tulis pesan pengantar, tautan gambar (.png/.jpg), atau informasi tambahan..."
+                            class="bg-black/40 border border-amber-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-nirrOrange resize-none"></textarea>
+
+                        <label for="webhook-mention-input" class="text-xs font-medium text-gray-300 mt-2">Mention (Tag Role ID / @everyone / @here / User ID)</label>
+                        <input type="text" id="webhook-mention-input" placeholder="@everyone atau <@&ROLE_ID>" autocomplete="off"
+                            class="bg-black/40 border border-amber-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-nirrOrange">
+
                         <small class="text-xs text-gray-400" id="webhook-status-hint">Status: Belum dikonfigurasi</small>
                     </div>
+
                     <div class="flex flex-wrap gap-2">
-                        <button class="bg-gradient-to-r from-nirrOrangeDark to-nirrOrange hover:opacity-90 text-white px-4 py-2 rounded-lg text-xs font-semibold transition" id="btn-save-webhook">Simpan Webhook</button>
+                        <button class="bg-gradient-to-r from-nirrOrangeDark to-nirrOrange hover:opacity-90 text-white px-4 py-2 rounded-lg text-xs font-semibold transition" id="btn-save-webhook">Simpan Pengaturan</button>
                         <button class="bg-white/10 hover:bg-white/15 border border-amber-500/20 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" id="btn-test-webhook">Uji Koneksi</button>
                         <button class="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 px-3 py-2 rounded-lg text-xs font-semibold transition" id="btn-delete-webhook">Hapus</button>
                     </div>

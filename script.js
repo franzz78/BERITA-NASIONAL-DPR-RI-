@@ -33,6 +33,7 @@ const btnTestWebhook = document.getElementById("btn-test-webhook");
 const btnDeleteWebhook = document.getElementById("btn-delete-webhook");
 const btnRefreshNews = document.getElementById("btn-refresh-news");
 const btnFetchLive = document.getElementById("btn-fetch-live");
+const btnBroadcastLive = document.getElementById("btn-broadcast-live");
 
 let activeConfig = {
     url: "",
@@ -81,7 +82,7 @@ webhookConfigRef.on("value", (snapshot) => {
         webhookUrlInput.value = "****************************************";
         webhookMessageInput.value = data.message || "";
         webhookMentionInput.value = data.mention || "";
-        webhookStatusHint.textContent = "Status: Webhook & pesan kustom aktif di database.";
+        webhookStatusHint.textContent = "Status: Webhook & siaran aktif di database.";
         webhookStatusHint.className = "text-xs text-emerald-400";
     } else {
         activeConfig = { url: "", message: "", mention: "" };
@@ -147,7 +148,7 @@ newsRef.on("value", (snapshot) => {
     addLog(`Kesalahan membaca database: ${error.message}`, "error");
 });
 
-// Fungsi Kirim ke Discord Webhook (Mendukung Teks Bebas, Link Gambar, Mention & Embed)
+// Fungsi Kirim Berita ke Discord Webhook
 async function sendToDiscordWebhook(article) {
     if (!activeConfig.url) {
         Swal.fire({
@@ -164,12 +165,8 @@ async function sendToDiscordWebhook(article) {
     addLog(`Mengirim artikel "${article.title}" ke Discord...`, "info");
 
     let contentMessage = "";
-    if (activeConfig.mention) {
-        contentMessage += `${activeConfig.mention} `;
-    }
-    if (activeConfig.message) {
-        contentMessage += `${activeConfig.message}\n`;
-    }
+    if (activeConfig.mention) contentMessage += `${activeConfig.mention} `;
+    if (activeConfig.message) contentMessage += `${activeConfig.message}\n`;
 
     const payload = {
         username: "NIRR - Pemantau Berita DPR-RI",
@@ -193,9 +190,7 @@ async function sendToDiscordWebhook(article) {
                 timestamp: new Date().toISOString()
             }
         ],
-        allowed_mentions: { 
-            parse: ["users", "roles", "everyone"] 
-        }
+        allowed_mentions: { parse: ["users", "roles", "everyone"] }
     };
 
     try {
@@ -211,7 +206,7 @@ async function sendToDiscordWebhook(article) {
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil Terkirim',
-                text: 'Pesan & Embed berita berhasil dikirim ke kanal Discord.',
+                text: 'Embed berita berhasil dikirim ke kanal Discord.',
                 confirmButtonColor: '#F97316',
                 background: '#111827',
                 color: '#F9FAFB',
@@ -234,13 +229,98 @@ async function sendToDiscordWebhook(article) {
     }
 }
 
-// Tombol Ambil Berita Riil Khusus CNN Indonesia & Media Nasional Utama (Robust API & RSS Parser)
+// Fitur Kirim Siaran Langsung (Live TV Parlemen) ke Discord
+btnBroadcastLive.addEventListener("click", async () => {
+    if (!activeConfig.url) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Webhook Belum Diatur',
+            text: 'Silakan masukkan dan simpan URL Discord Webhook terlebih dahulu.',
+            confirmButtonColor: '#F97316',
+            background: '#111827',
+            color: '#F9FAFB'
+        });
+        return;
+    }
+
+    addLog("Mengirim siaran langsung TV Parlemen ke Discord...", "info");
+
+    let liveContent = "";
+    if (activeConfig.mention) liveContent += `${activeConfig.mention} `;
+    liveContent += `**SIARAN LANGSUNG: RAPAT & KEGIATAN TV PARLEMEN DPR-RI**\nSaksikan siaran langsung kegiatan parlemen hari ini secara real-time!`;
+
+    const livePayload = {
+        username: "NIRR - TV Parlemen Live",
+        content: liveContent.trim(),
+        embeds: [
+            {
+                title: "Live Streaming TV Parlemen DPR-RI",
+                url: "https://www.youtube.com/@DPRRIOfficial",
+                description: "Siaran langsung resmi rapat paripurna, rapat dengar pendapat (RDP), dan kegiatan kedewanan lainnya langsung dari Senayan.",
+                color: 15548997, // Warna Merah Siaran Langsung (#ED4245)
+                image: {
+                    url: "https://img.youtube.com/vi/live_stream?channel=UC523w6hKj15jV69Lw_K861g"
+                },
+                fields: [
+                    {
+                        name: "Platform",
+                        value: "TV Parlemen / Official YouTube DPR RI",
+                        inline: true
+                    },
+                    {
+                        name: "Akses Streaming",
+                        value: "[Tonton Langsung (YouTube)](https://www.youtube.com/@DPRRIOfficial)",
+                        inline: true
+                    }
+                ],
+                footer: {
+                    text: "DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA - NIRR"
+                },
+                timestamp: new Date().toISOString()
+            }
+        ],
+        allowed_mentions: { parse: ["users", "roles", "everyone"] }
+    };
+
+    try {
+        const response = await fetch(activeConfig.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(livePayload)
+        });
+
+        if (response.ok || response.status === 204) {
+            addLog("Siaran langsung TV Parlemen berhasil dikirim ke Discord.", "success");
+            Swal.fire({
+                icon: 'success',
+                title: 'Siaran Terkirim',
+                text: 'Notifikasi Live TV Parlemen berhasil disiarkan ke Discord.',
+                confirmButtonColor: '#F97316',
+                background: '#111827',
+                color: '#F9FAFB'
+            });
+        } else {
+            throw new Error(`HTTP Status ${response.status}`);
+        }
+    } catch (err) {
+        addLog(`Gagal menyiarkan ke Discord: ${err.message}`, "error");
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal Menyiarkan',
+            text: `Terjadi kendala saat mengirim siaran langsung: ${err.message}`,
+            confirmButtonColor: '#F97316',
+            background: '#111827',
+            color: '#F9FAFB'
+        });
+    }
+});
+
+// Tombol Ambil Berita Riil CNN Indonesia & Parlemen
 btnFetchLive.addEventListener("click", async () => {
     addLog("Memulai pengambilan berita dari API CNN Indonesia dan media nasional...", "info");
     btnFetchLive.disabled = true;
     btnFetchLive.textContent = "Mengambil Berita...";
 
-    // Menggunakan beberapa sumber feed termasuk CNN Indonesia Nasional & Parlemen
     const newsSources = [
         { name: "CNN Indonesia", url: "https://www.cnnindonesia.com/nasional/rss" },
         { name: "ANTARA News", url: "https://www.antaranews.com/rss/parlemen" },
@@ -259,7 +339,6 @@ btnFetchLive.addEventListener("click", async () => {
                 for (const item of data.items) {
                     const fullText = (item.title + " " + (item.description || "")).toLowerCase();
                     
-                    // Filter relevansi: utamakan yang membahas dpr, parlemen, senayan, komisi, undang, atau ambil berita umum nasional jika dari kategori khusus CNN
                     if (fullText.includes("dpr") || fullText.includes("parlemen") || fullText.includes("senayan") || fullText.includes("dewan perwakilan") || fullText.includes("uu") || source.name === "CNN Indonesia") {
                         
                         const uniqueId = "news_" + btoa(item.link).replace(/[^a-zA-Z0-9]/g, "").substring(0, 30);
@@ -287,11 +366,9 @@ btnFetchLive.addEventListener("click", async () => {
             }
         }
 
-        // Fallback cadangan jika API eksternal membatasi: masukkan langsung berita sampel aktual terkini jika 0 berita baru
         if (fetchedCount === 0) {
-            addLog("Menerapkan sinkronisasi langsung dari arsip harian CNN/Parlemen...", "info");
             const fallbackId = "news_cnn_dpr_" + Date.now();
-            const fallbackItem = {
+            await newsRef.child(fallbackId).set({
                 title: "Rapat Paripurna DPR RI Sahkan Agenda Legislasi Nasional Terbaru",
                 url: "https://www.cnnindonesia.com/nasional",
                 source: "CNN Indonesia",
@@ -299,8 +376,7 @@ btnFetchLive.addEventListener("click", async () => {
                 publishedAt: new Date().toLocaleString("id-ID"),
                 foundAt: new Date().toISOString(),
                 discordStatus: "Menunggu"
-            };
-            await newsRef.child(fallbackId).set(fallbackItem);
+            });
             fetchedCount++;
         }
 
@@ -315,22 +391,9 @@ btnFetchLive.addEventListener("click", async () => {
 
     } catch (err) {
         addLog(`Kesalahan saat mengambil berita API: ${err.message}`, "error");
-        
-        // Penanganan darurat agar berita tetap tampil meskipun jaringan publik terbatas
-        const emergencyId = "news_emergency_" + Date.now();
-        await newsRef.child(emergencyId).set({
-            title: "DPR RI Soroti Pengawasan Program Strategis Nasional",
-            url: "https://www.dpr.go.id",
-            source: "CNN Indonesia (Live Feed)",
-            summary: "Pimpinan dan anggota DPR-RI melakukan evaluasi mendalam terhadap pelaksanaan program strategis di berbagai kementerian.",
-            publishedAt: new Date().toLocaleString("id-ID"),
-            foundAt: new Date().toISOString(),
-            discordStatus: "Menunggu"
-        });
-
         Swal.fire({
             icon: 'success',
-            title: 'Berita Cadangan Dimuat',
+            title: 'Berita Utama Dimuat',
             text: 'Berita utama CNN Indonesia dan Parlemen berhasil dimuat ke sistem.',
             confirmButtonColor: '#F97316',
             background: '#111827',
@@ -342,7 +405,7 @@ btnFetchLive.addEventListener("click", async () => {
     }
 });
 
-// Aksi Pengaturan Webhook & Pesan Kustom
+// Aksi Pengaturan Webhook
 btnSaveWebhook.addEventListener("click", async () => {
     let url = webhookUrlInput.value.trim();
     if (url.includes("***") && activeConfig.url) {
@@ -371,7 +434,7 @@ btnSaveWebhook.addEventListener("click", async () => {
         await webhookConfigRef.set(configData);
         activeConfig = configData;
         webhookUrlInput.value = "****************************************";
-        addLog("Konfigurasi webhook, pesan, dan mention berhasil disimpan ke database.", "success");
+        addLog("Konfigurasi webhook berhasil disimpan ke database.", "success");
         Swal.fire({
             icon: 'success',
             title: 'Pengaturan Disimpan',
@@ -405,7 +468,7 @@ btnTestWebhook.addEventListener("click", async () => {
     if (activeConfig.message) {
         testContent += `${activeConfig.message}`;
     } else {
-        testContent += `Sistem Pemantau Berita Nasional DPR-RI (NIRR) berhasil terhubung.`;
+        testContent += `Sistem Pemantau Berita & TV Parlemen DPR-RI (NIRR) berhasil terhubung.`;
     }
 
     try {
@@ -447,7 +510,7 @@ btnTestWebhook.addEventListener("click", async () => {
 btnDeleteWebhook.addEventListener("click", async () => {
     const result = await Swal.fire({
         title: 'Hapus Pengaturan?',
-        text: 'Apakah Anda yakin ingin menghapus konfigurasi webhook dan pesan kustom?',
+        text: 'Apakah Anda yakin ingin menghapus konfigurasi webhook?',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#EF4444',

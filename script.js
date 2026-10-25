@@ -12,7 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const newsRef = db.ref("dprNirrNews");
-const webhookConfigRef = db.ref("dprNirrConfig/webhookUrl");
+const webhookConfigRef = db.ref("dprNirrConfig/webhookData");
 
 // Elemen DOM
 const statusDot = document.getElementById("system-status-dot");
@@ -25,6 +25,8 @@ const newsTableBody = document.getElementById("news-table-body");
 const logContainer = document.getElementById("log-container");
 
 const webhookUrlInput = document.getElementById("webhook-url-input");
+const webhookMessageInput = document.getElementById("webhook-message-input");
+const webhookMentionInput = document.getElementById("webhook-mention-input");
 const webhookStatusHint = document.getElementById("webhook-status-hint");
 const btnSaveWebhook = document.getElementById("btn-save-webhook");
 const btnTestWebhook = document.getElementById("btn-test-webhook");
@@ -32,7 +34,11 @@ const btnDeleteWebhook = document.getElementById("btn-delete-webhook");
 const btnRefreshNews = document.getElementById("btn-refresh-news");
 const btnFetchLive = document.getElementById("btn-fetch-live");
 
-let activeWebhookUrl = "";
+let activeConfig = {
+    url: "",
+    message: "",
+    mention: ""
+};
 
 // Fungsi Pencatatan Log Aktivitas
 function addLog(message, type = "info") {
@@ -50,7 +56,7 @@ function addLog(message, type = "info") {
     logContainer.scrollTop = logContainer.scrollHeight;
 }
 
-// Pantau Koneksi Firebase & Webhook Tersimpan
+// Pantau Koneksi Firebase & Konfigurasi Webhook Tersimpan
 db.ref(".info/connected").on("value", (snapshot) => {
     if (snapshot.val() === true) {
         statusDot.className = "w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50";
@@ -67,17 +73,21 @@ db.ref(".info/connected").on("value", (snapshot) => {
     }
 });
 
-// Ambil Webhook dari Firebase
+// Ambil Konfigurasi dari Firebase
 webhookConfigRef.on("value", (snapshot) => {
-    const savedUrl = snapshot.val();
-    if (savedUrl) {
-        activeWebhookUrl = savedUrl;
+    const data = snapshot.val();
+    if (data && data.url) {
+        activeConfig = data;
         webhookUrlInput.value = "****************************************";
-        webhookStatusHint.textContent = "Status: Webhook aktif dan tersimpan aman di database.";
+        webhookMessageInput.value = data.message || "";
+        webhookMentionInput.value = data.mention || "";
+        webhookStatusHint.textContent = "Status: Webhook & pesan kustom aktif di database.";
         webhookStatusHint.className = "text-xs text-emerald-400";
     } else {
-        activeWebhookUrl = "";
+        activeConfig = { url: "", message: "", mention: "" };
         webhookUrlInput.value = "";
+        webhookMessageInput.value = "";
+        webhookMentionInput.value = "";
         webhookStatusHint.textContent = "Status: Belum dikonfigurasi";
         webhookStatusHint.className = "text-xs text-gray-400";
     }
@@ -123,7 +133,6 @@ newsRef.on("value", (snapshot) => {
         newsTableBody.appendChild(row);
     });
 
-    // Pasang event handler untuk tombol kirim per baris
     document.querySelectorAll(".btn-send-single").forEach(btn => {
         btn.addEventListener("click", (e) => {
             const id = e.target.getAttribute("data-id");
@@ -138,9 +147,9 @@ newsRef.on("value", (snapshot) => {
     addLog(`Kesalahan membaca database: ${error.message}`, "error");
 });
 
-// Fungsi Kirim ke Discord Webhook
+// Fungsi Kirim ke Discord Webhook (Mendukung Teks Bebas, Link Gambar, Mention & Embed)
 async function sendToDiscordWebhook(article) {
-    if (!activeWebhookUrl) {
+    if (!activeConfig.url) {
         Swal.fire({
             icon: 'warning',
             title: 'Webhook Belum Diatur',
@@ -154,8 +163,18 @@ async function sendToDiscordWebhook(article) {
 
     addLog(`Mengirim artikel "${article.title}" ke Discord...`, "info");
 
-    const embedPayload = {
+    // Format teks isi (Mention + Pesan Bebas / Gambar)
+    let contentMessage = "";
+    if (activeConfig.mention) {
+        contentMessage += `${activeConfig.mention} `;
+    }
+    if (activeConfig.message) {
+        contentMessage += `${activeConfig.message}\n`;
+    }
+
+    const payload = {
         username: "NIRR - Pemantau Berita DPR-RI",
+        content: contentMessage.trim() || undefined,
         embeds: [
             {
                 title: article.title,
@@ -175,14 +194,16 @@ async function sendToDiscordWebhook(article) {
                 timestamp: new Date().toISOString()
             }
         ],
-        allowed_mentions: { parse: [] }
+        allowed_mentions: { 
+            parse: ["users", "roles", "everyone"] 
+        }
     };
 
     try {
-        const response = await fetch(activeWebhookUrl, {
+        const response = await fetch(activeConfig.url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(embedPayload)
+            body: JSON.stringify(payload)
         });
 
         if (response.ok || response.status === 204) {
@@ -191,7 +212,7 @@ async function sendToDiscordWebhook(article) {
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil Terkirim',
-                text: 'Embed berita berhasil dikirim ke kanal Discord.',
+                text: 'Pesan & Embed berita berhasil dikirim ke kanal Discord.',
                 confirmButtonColor: '#F97316',
                 background: '#111827',
                 color: '#F9FAFB',
@@ -220,7 +241,6 @@ btnFetchLive.addEventListener("click", async () => {
     btnFetchLive.disabled = true;
     btnFetchLive.textContent = "Memuat...";
 
-    // Daftar RSS Feed publik media nasional Indonesia yang digabungkan via public rss2json API
     const rssFeeds = [
         { name: "ANTARA News", url: "https://www.antaranews.com/rss/parlemen" },
         { name: "CNN Indonesia", url: "https://www.cnnindonesia.com/nasional/rss" },
@@ -237,15 +257,12 @@ btnFetchLive.addEventListener("click", async () => {
 
             if (data && data.status === "ok" && data.items) {
                 for (const item of data.items) {
-                    // Filter relevansi kata kunci DPR atau Parlemen
                     const contentToCheck = (item.title + " " + (item.description || "")).toLowerCase();
                     if (contentToCheck.includes("dpr") || contentToCheck.includes("parlemen") || contentToCheck.includes("senayan") || contentToCheck.includes("dewan perwakilan")) {
                         
-                        // Buat ID unik berdasarkan URL artikel
                         const uniqueId = "news_" + btoa(item.link).replace(/[^a-zA-Z0-9]/g, "").substring(0, 30);
-                        
-                        // Cek apakah sudah ada di Firebase
                         const snapshot = await newsRef.child(uniqueId).once("value");
+                        
                         if (!snapshot.exists()) {
                             const cleanSummary = (item.description || item.title).replace(/<[^>]*>?/gm, '').substring(0, 200) + "...";
                             
@@ -293,9 +310,14 @@ btnFetchLive.addEventListener("click", async () => {
     }
 });
 
-// Aksi Pengaturan Webhook
+// Aksi Pengaturan Webhook & Pesan Kustom
 btnSaveWebhook.addEventListener("click", async () => {
-    const url = webhookUrlInput.value.trim();
+    let url = webhookUrlInput.value.trim();
+    // Jika user tidak mengubah input password (masih placeholder bintang), gunakan URL aktif yang lama
+    if (url.includes("***") && activeConfig.url) {
+        url = activeConfig.url;
+    }
+
     if (!url.startsWith("https://discord.com/api/webhooks/")) {
         Swal.fire({
             icon: 'error',
@@ -308,26 +330,32 @@ btnSaveWebhook.addEventListener("click", async () => {
         return;
     }
 
+    const configData = {
+        url: url,
+        message: webhookMessageInput.value.trim(),
+        mention: webhookMentionInput.value.trim()
+    };
+
     try {
-        await webhookConfigRef.set(url);
-        activeWebhookUrl = url;
+        await webhookConfigRef.set(configData);
+        activeConfig = configData;
         webhookUrlInput.value = "****************************************";
-        addLog("URL webhook berhasil disimpan ke database.", "success");
+        addLog("Konfigurasi webhook, pesan, dan mention berhasil disimpan ke database.", "success");
         Swal.fire({
             icon: 'success',
-            title: 'Webhook Disimpan',
-            text: 'Konfigurasi Discord Webhook berhasil disimpan.',
+            title: 'Pengaturan Disimpan',
+            text: 'Konfigurasi Discord berhasil diperbarui.',
             confirmButtonColor: '#F97316',
             background: '#111827',
             color: '#F9FAFB'
         });
     } catch (err) {
-        addLog(`Gagal menyimpan webhook: ${err.message}`, "error");
+        addLog(`Gagal menyimpan pengaturan: ${err.message}`, "error");
     }
 });
 
 btnTestWebhook.addEventListener("click", async () => {
-    if (!activeWebhookUrl) {
+    if (!activeConfig.url) {
         Swal.fire({
             icon: 'warning',
             title: 'Webhook Kosong',
@@ -340,13 +368,22 @@ btnTestWebhook.addEventListener("click", async () => {
     }
 
     addLog("Mengirim pesan uji koneksi ke Discord...", "info");
+    
+    let testContent = "";
+    if (activeConfig.mention) testContent += `${activeConfig.mention} `;
+    if (activeConfig.message) {
+        testContent += `${activeConfig.message}`;
+    } else {
+        testContent += `Sistem Pemantau Berita Nasional DPR-RI (NIRR) berhasil terhubung.`;
+    }
+
     try {
-        const response = await fetch(activeWebhookUrl, {
+        const response = await fetch(activeConfig.url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                content: "Sistem Pemantau Berita Nasional DPR-RI (NIRR) berhasil terhubung ke kanal Discord ini.",
-                allowed_mentions: { parse: [] }
+                content: testContent.trim(),
+                allowed_mentions: { parse: ["users", "roles", "everyone"] }
             })
         });
 
@@ -355,7 +392,7 @@ btnTestWebhook.addEventListener("click", async () => {
             Swal.fire({
                 icon: 'success',
                 title: 'Koneksi Berhasil',
-                text: 'Pesan uji coba berhasil dikirim ke Discord.',
+                text: 'Pesan uji coba & mention berhasil dikirim ke Discord.',
                 confirmButtonColor: '#F97316',
                 background: '#111827',
                 color: '#F9FAFB'
@@ -378,8 +415,8 @@ btnTestWebhook.addEventListener("click", async () => {
 
 btnDeleteWebhook.addEventListener("click", async () => {
     const result = await Swal.fire({
-        title: 'Hapus Webhook?',
-        text: 'Apakah Anda yakin ingin menghapus konfigurasi webhook?',
+        title: 'Hapus Pengaturan?',
+        text: 'Apakah Anda yakin ingin menghapus konfigurasi webhook dan pesan kustom?',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#EF4444',
@@ -392,15 +429,17 @@ btnDeleteWebhook.addEventListener("click", async () => {
 
     if (result.isConfirmed) {
         await webhookConfigRef.remove();
-        activeWebhookUrl = "";
+        activeConfig = { url: "", message: "", mention: "" };
         webhookUrlInput.value = "";
+        webhookMessageInput.value = "";
+        webhookMentionInput.value = "";
         webhookStatusHint.textContent = "Status: Belum dikonfigurasi";
         webhookStatusHint.className = "text-xs text-gray-400";
         addLog("Konfigurasi webhook dihapus dari database.", "info");
         Swal.fire({
             icon: 'success',
             title: 'Berhasil Dihapus',
-            text: 'Webhook telah dihapus.',
+            text: 'Pengaturan webhook telah dihapus.',
             confirmButtonColor: '#F97316',
             background: '#111827',
             color: '#F9FAFB'

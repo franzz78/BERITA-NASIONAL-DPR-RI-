@@ -399,3 +399,22 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(249, 115, 22, 0.4);
 }
+
+/* Styling tambahan untuk kustomisasi scrollbar dan transisi */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0B1020;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(251, 191, 36, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(249, 115, 22, 0.4);
+}

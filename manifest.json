@@ -1,0 +1,9 @@
+{
+  "name": "Pemanatau Berita DPR-RI NIRR",
+  "short_name": "NIRR DPR",
+  "description": "Sistem pemantau berita nasional media Indonesia yang membahas DPR-RI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1020",
+  "theme_color": "#0B1020"
+}

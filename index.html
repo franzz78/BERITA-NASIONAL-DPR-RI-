@@ -4,101 +4,136 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PEMANTAU BERITA NASIONAL DPR-RI - NIRR</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nirrBg: '#0B1020',
+                        nirrPanel: '#111827',
+                        nirrOrangeDark: '#EA580C',
+                        nirrOrange: '#F97316',
+                        nirrGold: '#FBBF24',
+                        nirrGoldYellow: '#FACC15',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- SweetAlert2 CSS & JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0B1020">
 </head>
-<body>
-    <div class="app-container">
-        <header class="app-header">
-            <div class="header-content">
-                <h1>DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA</h1>
-                <p class="subtitle">Sistem Pemantau Berita Nasional (NIRR)</p>
+<body class="bg-nirrBg text-gray-100 min-h-screen p-4 md:p-6 font-sans">
+    <div class="max-w-7xl mx-auto flex flex-col gap-6">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-nirrPanel to-gray-800 border border-amber-500/20 rounded-xl p-6 flex flex-wrap justify-between items-center gap-4 shadow-2xl backdrop-blur-md">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-nirrOrange to-nirrGold bg-clip-text text-transparent">
+                    DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA
+                </h1>
+                <p class="text-xs md:text-sm text-gray-400 mt-1">Sistem Pemantau Berita Nasional (NIRR) - Realtime Media Monitoring</p>
             </div>
-            <div class="header-badge">
-                <span class="badge-dot" id="system-status-dot"></span>
-                <span id="system-status-text">Menghubungkan...</span>
+            <div class="flex items-center gap-3 bg-nirrPanel/80 px-4 py-2 rounded-full border border-amber-500/20 text-sm">
+                <span class="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50" id="system-status-dot"></span>
+                <span id="system-status-text" class="font-medium">Menghubungkan...</span>
             </div>
         </header>
 
-        <main class="dashboard-grid">
-            <!-- Ringkasan Statistik -->
-            <section class="card stats-card">
-                <h2>Statistik Pemantauan</h2>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <span class="stat-label">Total Berita Ditemukan</span>
-                        <span class="stat-value" id="stat-total-news">0</span>
+        <!-- Main Dashboard Grid -->
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Kolom Kiri: Statistik & Pengaturan Webhook -->
+            <div class="flex flex-col gap-6 lg:col-span-1">
+                <!-- Statistik -->
+                <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
+                    <h2 class="text-base font-semibold text-nirrGold border-b border-amber-500/20 pb-3 mb-4">Statistik Pemantauan</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-black/30 border border-white/5 p-3 rounded-lg flex flex-col">
+                            <span class="text-xs text-gray-400">Total Berita</span>
+                            <span class="text-lg font-bold text-white mt-1" id="stat-total-news">0</span>
+                        </div>
+                        <div class="bg-black/30 border border-white/5 p-3 rounded-lg flex flex-col">
+                            <span class="text-xs text-gray-400">Terkirim Discord</span>
+                            <span class="text-lg font-bold text-white mt-1" id="stat-sent-discord">0</span>
+                        </div>
+                        <div class="bg-black/30 border border-white/5 p-3 rounded-lg flex flex-col col-span-2">
+                            <span class="text-xs text-gray-400">Status Firebase</span>
+                            <span class="text-xs font-semibold px-2 py-1 rounded w-fit mt-1 bg-amber-500/10 text-amber-400" id="stat-firebase-status">Menunggu</span>
+                        </div>
+                        <div class="bg-black/30 border border-white/5 p-3 rounded-lg flex flex-col col-span-2">
+                            <span class="text-xs text-gray-400">Pembaruan Terakhir</span>
+                            <span class="text-sm font-bold text-white mt-1" id="stat-last-update">-</span>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Terkirim ke Discord</span>
-                        <span class="stat-value" id="stat-sent-discord">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Status Firebase</span>
-                        <span class="stat-value status-badge" id="stat-firebase-status">Menunggu</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Pembaruan Terakhir</span>
-                        <span class="stat-value" id="stat-last-update">-</span>
-                    </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Pengaturan Discord Webhook -->
-            <section class="card webhook-card">
-                <h2>Pengaturan Discord Webhook</h2>
-                <p class="section-desc">Konfigurasi aman untuk pengiriman notifikasi embed berita otomatis ke Discord.</p>
-                <div class="form-group">
-                    <label for="webhook-url-input">URL Discord Webhook</label>
-                    <input type="password" id="webhook-url-input" placeholder="https://discord.com/api/webhooks/..." autocomplete="off">
-                    <small class="form-hint" id="webhook-status-hint">Status Webhook: Belum dikonfigurasi / Tersimpan di Backend</small>
-                </div>
-                <div class="button-group">
-                    <button class="btn btn-primary" id="btn-save-webhook">Simpan Webhook</button>
-                    <button class="btn btn-secondary" id="btn-test-webhook">Uji Koneksi</button>
-                    <button class="btn btn-danger" id="btn-delete-webhook">Hapus Webhook</button>
-                </div>
-            </section>
+                <!-- Pengaturan Discord Webhook -->
+                <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
+                    <h2 class="text-base font-semibold text-nirrGold border-b border-amber-500/20 pb-3 mb-4">Pengaturan Discord Webhook</h2>
+                    <p class="text-xs text-gray-400 mb-4">Konfigurasi URL Webhook untuk pengiriman embed berita otomatis secara real-time.</p>
+                    <div class="flex flex-col gap-3 mb-4">
+                        <label for="webhook-url-input" class="text-xs font-medium text-gray-300">URL Discord Webhook</label>
+                        <input type="password" id="webhook-url-input" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"
+                            class="bg-black/40 border border-amber-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-nirrOrange">
+                        <small class="text-xs text-gray-400" id="webhook-status-hint">Status: Belum dikonfigurasi</small>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="bg-gradient-to-r from-nirrOrangeDark to-nirrOrange hover:opacity-90 text-white px-4 py-2 rounded-lg text-xs font-semibold transition" id="btn-save-webhook">Simpan Webhook</button>
+                        <button class="bg-white/10 hover:bg-white/15 border border-amber-500/20 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" id="btn-test-webhook">Uji Koneksi</button>
+                        <button class="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 px-3 py-2 rounded-lg text-xs font-semibold transition" id="btn-delete-webhook">Hapus</button>
+                    </div>
+                </section>
+            </div>
 
-            <!-- Pemantauan Berita & Feed -->
-            <section class="card news-card full-width">
-                <div class="card-header-flex">
-                    <h2>Daftar Berita Terbaru DPR-RI</h2>
-                    <button class="btn btn-sm btn-secondary" id="btn-refresh-news">Muat Ulang</button>
-                </div>
-                <div class="table-responsive">
-                    <table class="news-table">
-                        <thead>
-                            <tr>
-                                <th>Waktu Publikasi</th>
-                                <th>Judul Berita</th>
-                                <th>Sumber Media</th>
-                                <th>Status Discord</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="news-table-body">
-                            <tr>
-                                <td colspan="5" class="text-center">Memuat data berita dari Firebase...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <!-- Kolom Kanan: Daftar Berita & Log Aktivitas -->
+            <div class="flex flex-col gap-6 lg:col-span-2">
+                <!-- Pemantauan Berita & Feed -->
+                <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
+                    <div class="flex justify-between items-center border-b border-amber-500/20 pb-3 mb-4">
+                        <h2 class="text-base font-semibold text-nirrGold">Daftar Berita Terbaru DPR-RI</h2>
+                        <div class="flex gap-2">
+                            <button class="bg-gradient-to-r from-nirrOrangeDark to-nirrOrange hover:opacity-90 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition" id="btn-fetch-live">Ambil Berita Riil</button>
+                            <button class="bg-white/10 hover:bg-white/15 border border-amber-500/20 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition" id="btn-refresh-news">Muat Ulang</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="bg-black/30 text-nirrGold border-b border-white/5">
+                                    <th class="p-3">Waktu</th>
+                                    <th class="p-3">Judul Berita</th>
+                                    <th class="p-3">Media</th>
+                                    <th class="p-3">Status Discord</th>
+                                    <th class="p-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="news-table-body">
+                                <tr>
+                                    <td colspan="5" class="p-4 text-center text-gray-400">Memuat data berita dari Firebase...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
 
-            <!-- Log Aktivitas -->
-            <section class="card log-card full-width">
-                <h2>Log Aktivitas Sistem</h2>
-                <div class="log-container" id="log-container">
-                    <div class="log-item info">[Sistem] Menginisialisasi antarmuka dan koneksi Firebase Realtime Database...</div>
-                </div>
-            </section>
+                <!-- Log Aktivitas -->
+                <section class="bg-nirrPanel border border-amber-500/20 rounded-xl p-5 shadow-lg">
+                    <h2 class="text-base font-semibold text-nirrGold border-b border-amber-500/20 pb-3 mb-4">Log Aktivitas Sistem</h2>
+                    <div class="bg-[#070A12] border border-white/5 rounded-lg p-3 h-40 overflow-y-auto font-mono text-xs flex flex-col gap-1.5" id="log-container">
+                        <div class="text-nirrGold">[Sistem] Menginisialisasi antarmuka dan modul pemantauan berita...</div>
+                    </div>
+                </section>
+            </div>
         </main>
 
-        <footer class="app-footer">
+        <!-- Footer -->
+        <footer class="text-center py-6 text-xs text-gray-400 border-t border-amber-500/20">
             <p>DEWAN PERWAKILAN RAKYAT REPUBLIK INDONESIA - NIRR</p>
-            <p class="footer-sub">Sistem Pemantau Berita Terintegrasi 24/7</p>
+            <p class="text-nirrOrange mt-1">Sistem Pemantau Berita Terintegrasi Nasional</p>
         </footer>
     </div>
 

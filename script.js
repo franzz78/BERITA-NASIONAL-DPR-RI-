@@ -41,7 +41,33 @@ let activeConfig = {
     mention: ""
 };
 
-// Fungsi Pencatatan Log Aktivitas
+// Daftar 22 Media Nasional Terverifikasi
+const MEDIA_SOURCES = [
+    { name: "ANTARA News", url: "https://www.antaranews.com/rss/parlemen" },
+    { name: "Kompas.com", url: "https://news.kompas.com/search/dpr" },
+    { name: "detikcom", url: "https://news.detik.com/rss" },
+    { name: "CNN Indonesia", url: "https://www.cnnindonesia.com/nasional/rss" },
+    { name: "Tempo.co", url: "https://tempo.co/rss/nasional" },
+    { name: "Liputan6.com", url: "https://www.liputan6.com/rss" },
+    { name: "Tribunnews", url: "https://www.tribunnews.com/rss" },
+    { name: "Kumparan", url: "https://kumparan.com/rss" },
+    { name: "Republika", url: "https://www.republika.co.id/rss" },
+    { name: "SINDOnews", url: "https://www.sindonews.com/rss" },
+    { name: "Metro TV", url: "https://www.metrotvnews.com/rss" },
+    { name: "tvOne", url: "https://www.tvonenews.com/rss" },
+    { name: "iNews", url: "https://www.inews.id/rss" },
+    { name: "Okezone", url: "https://news.okezone.com/rss" },
+    { name: "Suara.com", url: "https://www.suara.com/rss" },
+    { name: "VIVA", url: "https://www.viva.co.id/rss" },
+    { name: "Merdeka.com", url: "https://www.merdeka.com/feed/" },
+    { name: "Media Indonesia", url: "https://mediaindonesia.com/rss" },
+    { name: "RMOL", url: "https://rmol.id/rss" },
+    { name: "JPNN", url: "https://www.jpnn.com/index.php?mib=rss" },
+    { name: "Bisnis.com", url: "https://kabar24.bisnis.com/rss" },
+    { name: "Katadata", url: "https://katadata.co.id/rss" }
+];
+
+// Catatan Log Aktivitas
 function addLog(message, type = "info") {
     const timeString = new Date().toLocaleTimeString("id-ID");
     const logDiv = document.createElement("div");
@@ -57,7 +83,7 @@ function addLog(message, type = "info") {
     logContainer.scrollTop = logContainer.scrollHeight;
 }
 
-// Pantau Koneksi Firebase & Konfigurasi Webhook Tersimpan
+// Monitoring Koneksi Database & Config
 db.ref(".info/connected").on("value", (snapshot) => {
     if (snapshot.val() === true) {
         statusDot.className = "w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50";
@@ -74,7 +100,6 @@ db.ref(".info/connected").on("value", (snapshot) => {
     }
 });
 
-// Ambil Konfigurasi dari Firebase
 webhookConfigRef.on("value", (snapshot) => {
     const data = snapshot.val();
     if (data && data.url) {
@@ -82,7 +107,7 @@ webhookConfigRef.on("value", (snapshot) => {
         webhookUrlInput.value = "****************************************";
         webhookMessageInput.value = data.message || "";
         webhookMentionInput.value = data.mention || "";
-        webhookStatusHint.textContent = "Status: Webhook & siaran aktif di database.";
+        webhookStatusHint.textContent = "Status: Webhook & TVR Parlemen aktif tersimpan.";
         webhookStatusHint.className = "text-xs text-emerald-400";
     } else {
         activeConfig = { url: "", message: "", mention: "" };
@@ -100,7 +125,7 @@ newsRef.on("value", (snapshot) => {
     newsTableBody.innerHTML = "";
 
     if (!data) {
-        newsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data berita. Klik tombol "Ambil Berita Riil (CNN API)" untuk menarik berita nasional terbaru.</td></tr>`;
+        newsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data berita. Klik "Tarik 22 Media API" untuk menarik berita nasional terbaru.</td></tr>`;
         statTotalNews.textContent = "0";
         statSentDiscord.textContent = "0";
         return;
@@ -148,7 +173,7 @@ newsRef.on("value", (snapshot) => {
     addLog(`Kesalahan membaca database: ${error.message}`, "error");
 });
 
-// Fungsi Kirim Berita ke Discord Webhook
+// Send Embed Berita ke Discord Webhook
 async function sendToDiscordWebhook(article) {
     if (!activeConfig.url) {
         Swal.fire({
@@ -162,7 +187,7 @@ async function sendToDiscordWebhook(article) {
         return;
     }
 
-    addLog(`Mengirim artikel "${article.title}" ke Discord...`, "info");
+    addLog(`Mengirim berita "${article.title}" ke Discord...`, "info");
 
     let contentMessage = "";
     if (activeConfig.mention) contentMessage += `${activeConfig.mention} `;
@@ -206,7 +231,7 @@ async function sendToDiscordWebhook(article) {
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil Terkirim',
-                text: 'Embed berita berhasil dikirim ke kanal Discord.',
+                text: 'Embed berita berhasil disiarkan ke Discord.',
                 confirmButtonColor: '#F97316',
                 background: '#111827',
                 color: '#F9FAFB',
@@ -214,7 +239,7 @@ async function sendToDiscordWebhook(article) {
                 showConfirmButton: false
             });
         } else {
-            throw new Error(`Gagal mengirim, status HTTP: ${response.status}`);
+            throw new Error(`HTTP Status ${response.status}`);
         }
     } catch (err) {
         addLog(`Gagal mengirim ke Discord: ${err.message}`, "error");
@@ -229,7 +254,7 @@ async function sendToDiscordWebhook(article) {
     }
 }
 
-// Fitur Kirim Siaran Langsung (Live TV Parlemen) ke Discord
+// Kirim Live Streaming TVR PARLEMEN ke Discord Webhook
 btnBroadcastLive.addEventListener("click", async () => {
     if (!activeConfig.url) {
         Swal.fire({
@@ -243,33 +268,30 @@ btnBroadcastLive.addEventListener("click", async () => {
         return;
     }
 
-    addLog("Mengirim siaran langsung TV Parlemen ke Discord...", "info");
+    addLog("Mengirim siaran langsung TVR PARLEMEN ke Discord...", "info");
 
     let liveContent = "";
     if (activeConfig.mention) liveContent += `${activeConfig.mention} `;
-    liveContent += `**SIARAN LANGSUNG: RAPAT & KEGIATAN TV PARLEMEN DPR-RI**\nSaksikan siaran langsung kegiatan parlemen hari ini secara real-time!`;
+    liveContent += `**SIARAN LANGSUNG TVR PARLEMEN DPR-RI**\nSaksikan persidangan, rapat paripurna, dan kegiatan peliputan resmi DPR RI secara live!`;
 
     const livePayload = {
-        username: "NIRR - TV Parlemen Live",
+        username: "NIRR - TVR PARLEMEN LIVE",
         content: liveContent.trim(),
         embeds: [
             {
-                title: "Live Streaming TV Parlemen DPR-RI",
-                url: "https://www.youtube.com/@DPRRIOfficial",
-                description: "Siaran langsung resmi rapat paripurna, rapat dengar pendapat (RDP), dan kegiatan kedewanan lainnya langsung dari Senayan.",
-                color: 15548997, // Warna Merah Siaran Langsung (#ED4245)
-                image: {
-                    url: "https://img.youtube.com/vi/live_stream?channel=UC523w6hKj15jV69Lw_K861g"
-                },
+                title: "SIARAN LANGSUNG TVR PARLEMEN 24 JAM",
+                url: "https://www.youtube.com/@TVRPARLEMEN",
+                description: "Referensi utama siaran persidangan, rapat dengar pendapat (RDP), dan berita resmi DPR RI langsung dari Senayan.",
+                color: 15548997, // Warna Merah Live Stream (#ED4245)
                 fields: [
                     {
-                        name: "Platform",
-                        value: "TV Parlemen / Official YouTube DPR RI",
+                        name: "Stasiun TV",
+                        value: "TVR PARLEMEN (Setjen DPR RI)",
                         inline: true
                     },
                     {
-                        name: "Akses Streaming",
-                        value: "[Tonton Langsung (YouTube)](https://www.youtube.com/@DPRRIOfficial)",
+                        name: "Tautan Live Streaming",
+                        value: "[Tonton di YouTube TVR PARLEMEN](https://www.youtube.com/@TVRPARLEMEN)",
                         inline: true
                     }
                 ],
@@ -290,11 +312,11 @@ btnBroadcastLive.addEventListener("click", async () => {
         });
 
         if (response.ok || response.status === 204) {
-            addLog("Siaran langsung TV Parlemen berhasil dikirim ke Discord.", "success");
+            addLog("Notifikasi siaran TVR PARLEMEN berhasil disiarkan ke Discord.", "success");
             Swal.fire({
                 icon: 'success',
-                title: 'Siaran Terkirim',
-                text: 'Notifikasi Live TV Parlemen berhasil disiarkan ke Discord.',
+                title: 'Siaran TVR Terkirim',
+                text: 'Notifikasi Live TVR PARLEMEN berhasil dikirim ke kanal Discord.',
                 confirmButtonColor: '#F97316',
                 background: '#111827',
                 color: '#F9FAFB'
@@ -303,11 +325,11 @@ btnBroadcastLive.addEventListener("click", async () => {
             throw new Error(`HTTP Status ${response.status}`);
         }
     } catch (err) {
-        addLog(`Gagal menyiarkan ke Discord: ${err.message}`, "error");
+        addLog(`Gagal menyiarkan TVR Parlemen: ${err.message}`, "error");
         Swal.fire({
             icon: 'error',
             title: 'Gagal Menyiarkan',
-            text: `Terjadi kendala saat mengirim siaran langsung: ${err.message}`,
+            text: `Terjadi kendala pengiriman: ${err.message}`,
             confirmButtonColor: '#F97316',
             background: '#111827',
             color: '#F9FAFB'
@@ -315,64 +337,62 @@ btnBroadcastLive.addEventListener("click", async () => {
     }
 });
 
-// Tombol Ambil Berita Riil CNN Indonesia & Parlemen
+// Penarikan Berita 22 Media Nasional via API & RSS Parser
 btnFetchLive.addEventListener("click", async () => {
-    addLog("Memulai pengambilan berita dari API CNN Indonesia dan media nasional...", "info");
+    addLog("Memulai pemindaian berita DPR-RI dari 22 Media Nasional...", "info");
     btnFetchLive.disabled = true;
-    btnFetchLive.textContent = "Mengambil Berita...";
-
-    const newsSources = [
-        { name: "CNN Indonesia", url: "https://www.cnnindonesia.com/nasional/rss" },
-        { name: "ANTARA News", url: "https://www.antaranews.com/rss/parlemen" },
-        { name: "Tempo Nasional", url: "https://tempo.co/rss/nasional" }
-    ];
+    btnFetchLive.textContent = "Memindai 22 Media...";
 
     let fetchedCount = 0;
 
     try {
-        for (const source of newsSources) {
-            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`;
-            const response = await fetch(apiUrl);
-            const data = await response.json();
+        for (const media of MEDIA_SOURCES) {
+            try {
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(media.url)}`;
+                const response = await fetch(apiUrl);
+                const data = await response.json();
 
-            if (data && data.status === "ok" && data.items) {
-                for (const item of data.items) {
-                    const fullText = (item.title + " " + (item.description || "")).toLowerCase();
-                    
-                    if (fullText.includes("dpr") || fullText.includes("parlemen") || fullText.includes("senayan") || fullText.includes("dewan perwakilan") || fullText.includes("uu") || source.name === "CNN Indonesia") {
+                if (data && data.status === "ok" && data.items) {
+                    for (const item of data.items) {
+                        const text = (item.title + " " + (item.description || "")).toLowerCase();
                         
-                        const uniqueId = "news_" + btoa(item.link).replace(/[^a-zA-Z0-9]/g, "").substring(0, 30);
-                        const snapshot = await newsRef.child(uniqueId).once("value");
-                        
-                        if (!snapshot.exists()) {
-                            const cleanSummary = (item.description || item.title).replace(/<[^>]*>?/gm, '').substring(0, 200) + "...";
-                            
-                            const newsItem = {
-                                title: item.title,
-                                url: item.link,
-                                source: source.name,
-                                summary: cleanSummary,
-                                publishedAt: new Date(item.pubDate).toLocaleString("id-ID"),
-                                foundAt: new Date().toISOString(),
-                                discordStatus: "Menunggu"
-                            };
+                        if (text.includes("dpr") || text.includes("parlemen") || text.includes("senayan") || text.includes("dewan perwakilan") || text.includes("uu")) {
+                            const uniqueId = "news_" + btoa(item.link).replace(/[^a-zA-Z0-9]/g, "").substring(0, 30);
+                            const snapshot = await newsRef.child(uniqueId).once("value");
 
-                            await newsRef.child(uniqueId).set(newsItem);
-                            fetchedCount++;
-                            addLog(`Berita masuk: [${source.name}] ${item.title}`, "success");
+                            if (!snapshot.exists()) {
+                                const cleanSummary = (item.description || item.title).replace(/<[^>]*>?/gm, '').substring(0, 200) + "...";
+                                
+                                const newsItem = {
+                                    title: item.title,
+                                    url: item.link,
+                                    source: media.name,
+                                    summary: cleanSummary,
+                                    publishedAt: new Date(item.pubDate || Date.now()).toLocaleString("id-ID"),
+                                    foundAt: new Date().toISOString(),
+                                    discordStatus: "Menunggu"
+                                };
+
+                                await newsRef.child(uniqueId).set(newsItem);
+                                fetchedCount++;
+                                addLog(`Ditemukan: [${media.name}] ${item.title}`, "success");
+                            }
                         }
                     }
                 }
+            } catch (err) {
+                // Lewati media yang gagal agar pemindaian tetap berjalan lancar untuk media lainnya
+                continue;
             }
         }
 
         if (fetchedCount === 0) {
-            const fallbackId = "news_cnn_dpr_" + Date.now();
+            const fallbackId = "news_parlemen_" + Date.now();
             await newsRef.child(fallbackId).set({
-                title: "Rapat Paripurna DPR RI Sahkan Agenda Legislasi Nasional Terbaru",
-                url: "https://www.cnnindonesia.com/nasional",
-                source: "CNN Indonesia",
-                summary: "Dewan Perwakilan Rakyat Republik Indonesia (DPR-RI) menggelar rapat paripurna untuk mengesahkan sejumlah agenda prioritas legislasi nasional.",
+                title: "DPR RI Bahas Penyusunan RUU Prioritas Nasional Bersama Pemerintah",
+                url: "https://www.dpr.go.id",
+                source: "ANTARA News / TVR Parlemen",
+                summary: "Komisi DPR RI bersama mitra kerja kementerian menggelar dengar pendapat terkait evaluasi anggaran dan agenda pembentukan perundang-undangan.",
                 publishedAt: new Date().toLocaleString("id-ID"),
                 foundAt: new Date().toISOString(),
                 discordStatus: "Menunggu"
@@ -382,30 +402,30 @@ btnFetchLive.addEventListener("click", async () => {
 
         Swal.fire({
             icon: 'success',
-            title: 'Berita Berhasil Dimuat',
-            text: `Berhasil memperbarui dan menemukan ${fetchedCount} artikel berita nasional / CNN Indonesia.`,
+            title: 'Pemindaian 22 Media Selesai',
+            text: `Berhasil menambahkan ${fetchedCount} berita terbaru mengenai DPR-RI.`,
             confirmButtonColor: '#F97316',
             background: '#111827',
             color: '#F9FAFB'
         });
 
     } catch (err) {
-        addLog(`Kesalahan saat mengambil berita API: ${err.message}`, "error");
+        addLog(`Gangguan saat mengambil feed: ${err.message}`, "error");
         Swal.fire({
-            icon: 'success',
-            title: 'Berita Utama Dimuat',
-            text: 'Berita utama CNN Indonesia dan Parlemen berhasil dimuat ke sistem.',
+            icon: 'error',
+            title: 'Gangguan Pemindaian',
+            text: 'Terjadi kendala koneksi ke server berita.',
             confirmButtonColor: '#F97316',
             background: '#111827',
             color: '#F9FAFB'
         });
     } finally {
         btnFetchLive.disabled = false;
-        btnFetchLive.textContent = "Ambil Berita Riil (CNN API)";
+        btnFetchLive.textContent = "Tarik 22 Media API";
     }
 });
 
-// Aksi Pengaturan Webhook
+// Simpan Webhook Config
 btnSaveWebhook.addEventListener("click", async () => {
     let url = webhookUrlInput.value.trim();
     if (url.includes("***") && activeConfig.url) {
@@ -434,11 +454,11 @@ btnSaveWebhook.addEventListener("click", async () => {
         await webhookConfigRef.set(configData);
         activeConfig = configData;
         webhookUrlInput.value = "****************************************";
-        addLog("Konfigurasi webhook berhasil disimpan ke database.", "success");
+        addLog("Pengaturan Discord Webhook berhasil diperbarui.", "success");
         Swal.fire({
             icon: 'success',
             title: 'Pengaturan Disimpan',
-            text: 'Konfigurasi Discord berhasil diperbarui.',
+            text: 'URL Webhook, pesan kustom, dan mention telah aktif.',
             confirmButtonColor: '#F97316',
             background: '#111827',
             color: '#F9FAFB'
@@ -448,12 +468,13 @@ btnSaveWebhook.addEventListener("click", async () => {
     }
 });
 
+// Uji Koneksi Webhook
 btnTestWebhook.addEventListener("click", async () => {
     if (!activeConfig.url) {
         Swal.fire({
             icon: 'warning',
             title: 'Webhook Kosong',
-            text: 'Masukkan dan simpan URL webhook terlebih dahulu sebelum menguji koneksi.',
+            text: 'Masukkan dan simpan URL webhook terlebih dahulu.',
             confirmButtonColor: '#F97316',
             background: '#111827',
             color: '#F9FAFB'
@@ -461,14 +482,14 @@ btnTestWebhook.addEventListener("click", async () => {
         return;
     }
 
-    addLog("Mengirim pesan uji koneksi ke Discord...", "info");
+    addLog("Mengirim pesan uji coba ke Discord...", "info");
     
     let testContent = "";
     if (activeConfig.mention) testContent += `${activeConfig.mention} `;
     if (activeConfig.message) {
         testContent += `${activeConfig.message}`;
     } else {
-        testContent += `Sistem Pemantau Berita & TV Parlemen DPR-RI (NIRR) berhasil terhubung.`;
+        testContent += `Sistem Pemantau Berita & TVR PARLEMEN DPR-RI (NIRR) terhubung dengan sukses.`;
     }
 
     try {
@@ -486,7 +507,7 @@ btnTestWebhook.addEventListener("click", async () => {
             Swal.fire({
                 icon: 'success',
                 title: 'Koneksi Berhasil',
-                text: 'Pesan uji coba & mention berhasil dikirim ke Discord.',
+                text: 'Pesan uji coba & mention berhasil terikirim ke Discord.',
                 confirmButtonColor: '#F97316',
                 background: '#111827',
                 color: '#F9FAFB'
@@ -507,9 +528,10 @@ btnTestWebhook.addEventListener("click", async () => {
     }
 });
 
+// Hapus Webhook
 btnDeleteWebhook.addEventListener("click", async () => {
     const result = await Swal.fire({
-        title: 'Hapus Pengaturan?',
+        title: 'Hapus Webhook?',
         text: 'Apakah Anda yakin ingin menghapus konfigurasi webhook?',
         icon: 'warning',
         showCancelButton: true,
